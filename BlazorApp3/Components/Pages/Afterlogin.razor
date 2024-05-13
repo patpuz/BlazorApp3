@@ -1,0 +1,113 @@
+﻿@page "/movies"
+@rendermode InteractiveServer
+@using BlazorApp3.Components.Pages
+@inject MoviesDbContext dbContext
+@inject NavigationManager NavigationManager
+
+<h1>Lista Filmów</h1>
+
+<div class="form-group">
+    <label for="sortSelect">Sortuj po:</label>
+    <select class="form-control" id="sortSelect" @onchange="SortMovies">
+        <option value="ratingDescending">Ocena - malejąco</option>
+        <option value="ratingAscending">Ocena - rosnąco</option>
+        <option value="alphabetical">Alfabetycznie</option>
+        <option value="ratingsCountDescending">Liczba ocen - malejąco</option>
+        <option value="ratingsCountAscending">Liczba ocen - rosnąco</option>
+    </select>
+</div>
+
+@if (movies == null)
+{
+    <p>Ładowanie...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tytuł</th>
+                <th>Opis</th>
+                <th>Liczba Ocen</th>
+                <th>Ocena Średnia</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var movie in movies)
+            {
+                <tr>
+                    <td>@movie.Title</td>
+                    <td>@movie.Description</td>
+                    <td>@movie.Ratings.Count</td>
+                    <td>@GetAverageRating(movie)</td>
+                    <td>
+                        <button class="btn btn-secondary" @onclick="() => GoToAddRatingPage(movie.Id)">Dodaj Ocenę</button>
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+    <button class="btn btn-secondary mr-2" @onclick="GoToAddFilmPage">Dodaj Film</button>
+}
+
+@code {
+    List<Movie> movies;
+    //string newMovieTitle;
+    //string newMovieDescription;
+
+    protected override async Task OnInitializedAsync()
+    {
+        movies = await dbContext.Movies.Include(m => m.Ratings).ToListAsync();
+    }
+
+    double GetAverageRating(Movie movie)
+    {
+        if (movie.Ratings.Count > 0)
+        {
+            return movie.Ratings.Average(r => r.Value);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    private void GoToAddRatingPage(int movieId)
+    {
+        NavigationManager.NavigateTo($"/addrating/{movieId}");
+    }
+    private void GoToAddFilmPage()
+    {
+        NavigationManager.NavigateTo("/addmovie");
+    }
+
+    private void SortMovies(ChangeEventArgs e)
+    {
+        string sortBy = e.Value.ToString();
+
+        switch (sortBy)
+        {
+            case "ratingDescending":
+                movies = movies.OrderByDescending(m => m.Ratings.Average(r => r.Value)).ToList();
+                break;
+            case "ratingAscending":
+                movies = movies.OrderBy(m => m.Ratings.Average(r => r.Value)).ToList();
+                break;
+            case "alphabetical":
+                movies = movies.OrderBy(m => m.Title).ToList();
+                break;
+            case "ratingsCountDescending":
+                movies = movies.OrderByDescending(m => m.Ratings.Count).ToList();
+                break;
+            case "ratingsCountAscending":
+                movies = movies.OrderBy(m => m.Ratings.Count).ToList();
+                break;
+            default:
+                break;
+        }
+    }
+}

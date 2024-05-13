@@ -1,0 +1,26 @@
+﻿@page "/auth"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+<PageTitle>Welcome</PageTitle>
+<AuthorizeView>
+    <h1>Welcome, @context.User.Identity?.Name!</h1>
+</AuthorizeView>
+
+
+<p>Thank you for logging in. You are now authenticated and have access to our film base.</p>
+
+<button class="btn btn-secondary" @onclick="GoToMovies">Go to Film Base</button>
+
+@code
+{
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    private void GoToMovies()
+    {
+        NavigationManager.NavigateTo("/movies");
+    }
+}

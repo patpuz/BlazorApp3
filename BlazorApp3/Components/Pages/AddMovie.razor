@@ -1,0 +1,40 @@
+﻿@page "/addmovie"
+@rendermode InteractiveServer
+@using BlazorApp3.Components.Pages
+@inject MoviesDbContext dbContext
+@inject NavigationManager NavigationManager
+
+<h1>Dodaj Nowy Film</h1>
+
+<div class="form-group">
+    <label for="title">Tytuł:</label>
+    <input type="text" class="form-control" @bind="@newMovieTitle" />
+    <label for="description">Opis:</label>
+    <input type="text" class="form-control" @bind="@newMovieDescription" />
+    <button class="btn btn-success mt-2" @onclick="AddNewMovieToDatabase">Dodaj</button>
+</div>
+
+@code {
+    string newMovieTitle;
+    string newMovieDescription;
+
+    private async Task AddNewMovieToDatabase()
+    {
+        if (!string.IsNullOrEmpty(newMovieTitle) && !string.IsNullOrEmpty(newMovieDescription))
+        {
+            var newMovie = new Movie
+                {
+                    Title = newMovieTitle,
+                    Description = newMovieDescription
+                };
+
+            dbContext.Movies.Add(newMovie);
+            await dbContext.SaveChangesAsync();
+
+            newMovieTitle = "";
+            newMovieDescription = "";
+
+            NavigationManager.NavigateTo("/movies");
+        }
+    }
+}

@@ -1,0 +1,57 @@
+﻿@page "/addrating/{MovieId}"
+@using BlazorApp3.Components.Pages
+@inject MoviesDbContext dbContext
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Dodaj Ocenę</h3>
+
+@if (movie != null)
+{
+    <h4>@movie.Title</h4>
+    <p>@movie.Description</p>
+
+    <div class="form-group">
+        <label for="rating">Ocena:</label>
+        <input type="range" class="form-control-range" id="rating" @bind="@newRating" min="1" max="10" />
+        <span>@newRating</span>
+    </div>
+
+    <button class="btn btn-primary" @onclick="SaveRating">Dodaj Ocenę</button>
+}
+else
+{
+    <p>Brak filmu do wyświetlenia.</p>
+}
+
+@code {
+    [Parameter]
+    public string MovieId { get; set; }
+
+    Movie movie;
+    int newRating = 5;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(MovieId) && int.TryParse(MovieId, out int movieId))
+        {
+            movie = await dbContext.Movies.FirstOrDefaultAsync(m => m.Id == movieId);
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/movies");
+        }
+    }
+
+    async Task SaveRating()
+    {
+        if (movie != null)
+        {
+            var rating = new Rating { Value = newRating, MovieId = movie.Id };
+            dbContext.Add(rating);
+            await dbContext.SaveChangesAsync();
+            newRating = 5;
+            NavigationManager.NavigateTo("/movies");
+        }
+    }
+}
